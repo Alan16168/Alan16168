@@ -276,9 +276,9 @@
             <div class="info-box">
                 <strong>📌 使用说明：</strong><br>
                 1. 先点击"检查系统状态"确认后端运行正常<br>
-                2. 注册一个新用户或使用演示账户登录<br>
+                2. <strong style="color: #dc3545;">⚠️ 重要：</strong>使用自动生成的邮箱注册，或使用演示账户：<strong>admin@demo.com / demo123456</strong><br>
                 3. 登录后可以测试AI聊天、查看历史等功能<br>
-                4. Token会自动保存，刷新页面后仍然有效
+                4. <strong>注意：</strong>系统使用内存数据库，服务器重启后需要重新注册用户
             </div>
 
             <!-- 第一部分：系统状态 -->
@@ -292,9 +292,13 @@
             <div class="section">
                 <h2>🔐 2. 用户认证</h2>
                 
+                <div style="background: #fff3cd; padding: 10px; border-radius: 5px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                    <strong>💡 提示：</strong>使用自动生成的邮箱注册（推荐），或使用演示管理员账户：<strong>admin@demo.com / demo123456</strong>
+                </div>
+                
                 <div class="grid">
                     <div>
-                        <h3>注册新用户</h3>
+                        <h3>注册新用户（推荐）</h3>
                         <div class="input-group">
                             <label>姓名</label>
                             <input type="text" id="regName" value="测试用户" placeholder="请输入姓名">
