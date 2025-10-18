@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API连接测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-box">
+        <h1>🔧 API连接测试</h1>
+        
+        <div class="info result">
+            <strong>检测到的环境：</strong><br>
+            主机名: <span id="hostname"></span><br>
+            API地址: <span id="apiUrl"></span>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button onclick="testConnection()">测试API连接</button>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 自动检测API URL
+        const API_URL = window.location.hostname.includes('sandbox.novita.ai') 
+            ? 'https://5000-i75t2b5146b2ag3brd419-ad490db5.sandbox.novita.ai'
+            : 'http://localhost:5000';
+
+        document.getElementById('hostname').textContent = window.location.hostname;
+        document.getElementById('apiUrl').textContent = API_URL;
+
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="info result"><div class="loading"></div> 正在连接...</div>';
+
+            try {
+                console.log('Testing connection to:', API_URL + '/api/health');
+                
+                const response = await fetch(API_URL + '/api/health');
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.status === 'OK') {
+                    resultDiv.innerHTML = `
+                        <div class="success result">
+                            <strong>✅ 连接成功！</strong><br><br>
+                            状态: ${data.status}<br>
+                            模式: ${data.mode}<br>
+                            时间: ${new Date(data.timestamp).toLocaleString('zh-CN')}<br><br>
+                            <strong>功能状态：</strong><br>
+                            ${Object.entries(data.features || {}).map(([key, value]) => 
+                                `• ${key}: ${value}`
+                            ).join('<br>')}
+                        </div>
+                    `;
+                } else {
+                    throw new Error('系统状态异常');
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error result">
+                        <strong>❌ 连接失败</strong><br><br>
+                        错误: ${error.message}<br><br>
+                        <strong>可能的原因：</strong><br>
+                        1. 后端服务器未运行<br>
+                        2. API地址配置错误<br>
+                        3. CORS跨域问题<br>
+                        4. 网络连接问题<br><br>
+                        <strong>调试信息：</strong><br>
+                        尝试的URL: ${API_URL}/api/health<br>
+                        当前主机: ${window.location.hostname}<br><br>
+                        请打开浏览器控制台(F12)查看详细错误信息
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时自动测试
+        window.onload = testConnection;
+    </script>
+</body>
+</html>
