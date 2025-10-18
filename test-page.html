@@ -411,9 +411,15 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000';
+        // 自动检测API URL - 优先使用公网URL
+        const API_URL = window.location.hostname.includes('sandbox.novita.ai') 
+            ? 'https://5000-i75t2b5146b2ag3brd419-ad490db5.sandbox.novita.ai'
+            : 'http://localhost:5000';
+        
         let currentToken = localStorage.getItem('authToken') || '';
         let sessionId = 'test-session-' + Date.now();
+        
+        console.log('Using API URL:', API_URL);
 
         // 页面加载时检查token和系统状态
         window.onload = function() {
