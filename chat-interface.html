@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BC房东管理系统 - AI助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #f9fafb;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.assistant .avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 18px;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .sources {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f3f4f6;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .source-item {
+            margin-top: 6px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 15px 20px;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .input-area {
+            padding: 20px 30px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            font-size: 15px;
+            resize: none;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+            min-height: 50px;
+            max-height: 150px;
+        }
+
+        #messageInput:focus {
+            border-color: #667eea;
+        }
+
+        #sendButton {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #sendButton:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 12px;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 40px;
+        }
+
+        .sample-questions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .sample-question {
+            padding: 20px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .sample-question:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .sample-question-title {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .sample-question-text {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .error-message {
+            padding: 15px;
+            background: #fee2e2;
+            color: #dc2626;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .login-prompt {
+            padding: 20px;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .login-button {
+            margin-top: 12px;
+            padding: 10px 24px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 BC房东管理助手</h1>
+            <div class="status">
+                <span class="status-dot"></span>
+                <span id="statusText">在线</span>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon">💬</div>
+                <div class="welcome-title">欢迎使用AI助手</div>
+                <div class="welcome-subtitle">我可以帮你解答BC省租赁法相关问题</div>
+                
+                <div class="sample-questions">
+                    <div class="sample-question" onclick="askSampleQuestion('在BC省，房东可以收多少押金？')">
+                        <div class="sample-question-title">💰 关于押金</div>
+                        <div class="sample-question-text">房东可以收多少押金？</div>
+                    </div>
+                    <div class="sample-question" onclick="askSampleQuestion('BC省的租客可以养宠物吗？房东能禁止吗？')">
+                        <div class="sample-question-title">🐕 关于宠物</div>
+                        <div class="sample-question-text">租客可以养宠物吗？</div>
+                    </div>
+                    <div class="sample-question" onclick="askSampleQuestion('房东想涨租金，需要提前多久通知我？')">
+                        <div class="sample-question-title">📈 关于租金上涨</div>
+                        <div class="sample-question-text">涨租金需要提前通知吗？</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-container">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="输入你的问题..." 
+                    rows="1"
+                    onkeypress="handleKeyPress(event)"
+                ></textarea>
+                <button id="sendButton" onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let token = null;
+        let sessionId = 'session-' + Date.now();
+
+        // 自动登录
+        async function autoLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@demo.com',
+                        password: 'demo123456'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success && data.token) {
+                    token = data.token;
+                    console.log('✅ 自动登录成功');
+                } else {
+                    showError('登录失败，请刷新页面重试');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                showError('无法连接到服务器，请确保后端服务正在运行');
+            }
+        }
+
+        function showError(message) {
+            const chatArea = document.getElementById('chatArea');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            chatArea.insertBefore(errorDiv, chatArea.firstChild);
+        }
+
+        function hideWelcome() {
+            const welcome = document.getElementById('welcomeScreen');
+            if (welcome) {
+                welcome.style.display = 'none';
+            }
+        }
+
+        function addMessage(text, isUser = false, sources = null) {
+            hideWelcome();
+            const chatArea = document.getElementById('chatArea');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = isUser ? '👤' : '🤖';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.innerHTML = text.replace(/\n/g, '<br>');
+            
+            // 添加来源
+            if (sources && sources.length > 0) {
+                const sourcesDiv = document.createElement('div');
+                sourcesDiv.className = 'sources';
+                sourcesDiv.innerHTML = '<strong>📚 来源文档:</strong>';
+                
+                sources.forEach(source => {
+                    const sourceItem = document.createElement('div');
+                    sourceItem.className = 'source-item';
+                    sourceItem.innerHTML = `📄 ${source.documentName}`;
+                    sourcesDiv.appendChild(sourceItem);
+                });
+                
+                content.appendChild(sourcesDiv);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            
+            chatArea.appendChild(messageDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function showTyping() {
+            hideWelcome();
+            const chatArea = document.getElementById('chatArea');
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message assistant';
+            typingDiv.id = 'typingIndicator';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = '🤖';
+            
+            const typingContent = document.createElement('div');
+            typingContent.className = 'message-content';
+            
+            const typingDots = document.createElement('div');
+            typingDots.className = 'typing-indicator';
+            typingDots.innerHTML = '<span></span><span></span><span></span>';
+            
+            typingContent.appendChild(typingDots);
+            typingDiv.appendChild(avatar);
+            typingDiv.appendChild(typingContent);
+            
+            chatArea.appendChild(typingDiv);
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) {
+                typing.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            if (!token) {
+                showError('正在连接服务器，请稍后再试...');
+                await autoLogin();
+                return;
+            }
+            
+            // 显示用户消息
+            addMessage(message, true);
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // 禁用输入
+            sendButton.disabled = true;
+            input.disabled = true;
+            
+            // 显示打字指示器
+            showTyping();
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chat/message`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        sessionId: sessionId,
+                        language: 'zh'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                hideTyping();
+                
+                if (data.success) {
+                    addMessage(data.message, false, data.sources);
+                } else {
+                    addMessage('抱歉，处理请求时出错了。请稍后重试。', false);
+                }
+            } catch (error) {
+                console.error('发送消息错误:', error);
+                hideTyping();
+                addMessage('无法连接到服务器，请检查后端是否运行。', false);
+            } finally {
+                sendButton.disabled = false;
+                input.disabled = false;
+                input.focus();
+            }
+        }
+
+        function askSampleQuestion(question) {
+            document.getElementById('messageInput').value = question;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // 自动调整输入框高度
+        document.getElementById('messageInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // 页面加载时自动登录
+        window.addEventListener('load', autoLogin);
+    </script>
+</body>
+</html>
