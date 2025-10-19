@@ -68,11 +68,11 @@ async function startServer() {
     const adminExists = await User.findOne({ email: 'admin@demo.com' });
     if (!adminExists) {
       console.log('👤 创建演示管理员账户...');
-      const hashedPassword = await bcrypt.hash('demo123456', 10);
+      // Pass plain password - the model's pre-save hook will hash it
       await User.create({
         name: 'Demo Admin',
         email: 'admin@demo.com',
-        password: hashedPassword,
+        password: 'demo123456', // Plain password - model will hash it
         role: 'admin',
         isActive: true,
         language: 'zh',
