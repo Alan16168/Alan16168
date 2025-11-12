@@ -58,13 +58,17 @@ const extractTextFromDocx = async (filePath) => {
 
 // Split text into chunks
 const splitTextIntoChunks = (text, chunkSize = 1000, overlap = 200) => {
-  const chunks = [];
-  let start = 0;
+  if (!text || text.length === 0) return [];
+  if (text.length <= chunkSize) return [text];
   
-  while (start < text.length) {
+  const step = Math.max(1, chunkSize - overlap);
+  const chunks = [];
+  
+  for (let start = 0; start < text.length; start += step) {
     const end = Math.min(start + chunkSize, text.length);
-    chunks.push(text.substring(start, end));
-    start = end - overlap;
+    chunks.push(text.slice(start, end));
+    
+    if (end === text.length) break;
   }
   
   return chunks;
